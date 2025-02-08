@@ -1,0 +1,33 @@
+{
+  "properties": [
+    {
+      "name": "grpc.server.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable gRPC server.",
+      "defaultValue": true
+    },
+    {
+      "name": "grpc.server.port",
+      "type": "java.lang.Integer",
+      "description": "gRPC server port.",
+      "defaultValue": 9090
+    },
+    {
+      "name": "grpc.server.host",
+      "type": "java.lang.String",
+      "description": "gRPC server host.",
+      "defaultValue": "0.0.0.0"
+    },
+    {
+      "name": "grpc.client.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable gRPC client.",
+      "defaultValue": true
+    },
+    {
+      "name": "grpc.registry.services",
+      "type": "java.util.Map<java.lang.String, com.changjiang.grpc.config.GrpcRegistryConfig.ServiceConfig>",
+      "description": "gRPC service registry configurations."
+    }
+  ]
+} 

@@ -1,0 +1,17 @@
+grpc:
+  server:
+    enabled: true
+    port: 9090
+    host: 0.0.0.0
+  client:
+    enabled: true
+  registry:
+    services:
+      system1:  # 系统简称
+        host: localhost
+        port: 9091
+        enabled: true
+      system2:
+        host: localhost
+        port: 9092
+        enabled: true

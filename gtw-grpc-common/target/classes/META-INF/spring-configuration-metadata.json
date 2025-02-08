@@ -1,0 +1,62 @@
+{
+  "groups": [
+    {
+      "name": "grpc.registry",
+      "type": "com.changjiang.grpc.config.GrpcRegistryConfig",
+      "sourceType": "com.changjiang.grpc.config.GrpcRegistryConfig"
+    },
+    {
+      "name": "grpc.server",
+      "type": "com.changjiang.grpc.config.GrpcServerConfig",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "grpc.client.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable gRPC client.",
+      "defaultValue": true
+    },
+    {
+      "name": "grpc.registry.services",
+      "type": "java.util.Map<java.lang.String,com.changjiang.grpc.config.GrpcRegistryConfig$ServiceConfig>",
+      "description": "gRPC service registry configurations.",
+      "sourceType": "com.changjiang.grpc.config.GrpcRegistryConfig"
+    },
+    {
+      "name": "grpc.server.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable gRPC server.",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig",
+      "defaultValue": true
+    },
+    {
+      "name": "grpc.server.host",
+      "type": "java.lang.String",
+      "description": "gRPC server host.",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig",
+      "defaultValue": "0.0.0.0"
+    },
+    {
+      "name": "grpc.server.keep-alive-time-in-seconds",
+      "type": "java.lang.Integer",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig",
+      "defaultValue": 60
+    },
+    {
+      "name": "grpc.server.max-concurrent-calls-per-connection",
+      "type": "java.lang.Integer",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig",
+      "defaultValue": 100
+    },
+    {
+      "name": "grpc.server.port",
+      "type": "java.lang.Integer",
+      "description": "gRPC server port.",
+      "sourceType": "com.changjiang.grpc.config.GrpcServerConfig",
+      "defaultValue": 9090
+    }
+  ],
+  "hints": []
+}
