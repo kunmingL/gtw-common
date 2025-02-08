@@ -34,13 +34,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Internal modules -->
-            <dependency>
-                <groupId>com.changjiang</groupId>
-                <artifactId>gtw-grpc-proto</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- gRPC dependencies -->
             <dependency>
                 <groupId>io.grpc</groupId>

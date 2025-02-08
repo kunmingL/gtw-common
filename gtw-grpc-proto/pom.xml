@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>gtw-grpc-proto</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
