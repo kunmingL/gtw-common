@@ -1,28 +1,34 @@
 package com.changjiang.grpc.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@Configuration
+
+@Component
 @ConfigurationProperties(prefix = "grpc.registry")
 public class GrpcRegistryConfig {
-    private Map<String, ServiceConfig> services = new HashMap<>();
 
-    public Map<String, ServiceConfig> getServices() {
-        return services;
-    }
-
-    public void setServices(Map<String, ServiceConfig> services) {
-        this.services = services;
-    }
+    private final Map<String, ServiceConfig> services = new HashMap<>();
 
     public static class ServiceConfig {
+        private String registerId;
         private String host;
         private int port;
         private boolean enabled = true;
+
+        // Getters and Setters
+        public String getRegisterId() {
+            return registerId;
+        }
+
+        public void setRegisterId(String registerId) {
+            this.registerId = registerId;
+        }
 
         public String getHost() {
             return host;
@@ -48,4 +54,8 @@ public class GrpcRegistryConfig {
             this.enabled = enabled;
         }
     }
-} 
+
+    public Map<String, ServiceConfig> getServices() {
+        return services;
+    }
+}

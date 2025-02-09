@@ -20,6 +20,7 @@
         <module>gtw-base</module>
         <module>gtw-grpc-proto</module>
         <module>gtw-grpc-common</module>
+        <module>gtw-maven-plugin</module>
     </modules>
 
     <properties>
