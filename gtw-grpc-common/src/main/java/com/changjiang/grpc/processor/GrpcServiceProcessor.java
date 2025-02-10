@@ -1,23 +1,38 @@
 package com.changjiang.grpc.processor;
 
+import com.changjiang.grpc.adapter.GrpcServiceAdapter;
 import com.changjiang.grpc.annotation.GrpcService;
 import com.changjiang.grpc.lib.GrpcRequest;
 import com.changjiang.grpc.lib.GrpcResponse;
 import com.changjiang.grpc.server.AbstractGrpcService;
 import com.changjiang.grpc.util.SerializationUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import io.grpc.stub.StreamObserver;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 @Component
 public class GrpcServiceProcessor implements BeanPostProcessor {
+    private static final Logger logger = LoggerFactory.getLogger(GrpcServiceProcessor.class);
+
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean.getClass().isAnnotationPresent(GrpcService.class)) {
-            return createServiceProxy(bean);
+            GrpcService annotation = bean.getClass().getAnnotation(GrpcService.class);
+            String serviceId = annotation.value().isEmpty() ? beanName : annotation.value();
+            
+            // 创建适配器
+            GrpcServiceAdapter adapter = new GrpcServiceAdapter(bean, serviceId);
+            logger.info("Created gRPC service adapter for bean: {} with serviceId: {}", beanName, serviceId);
+            
+            // 返回适配器实例，它将替换原始的 bean
+            return adapter;
         }
         return bean;
     }
@@ -37,15 +52,18 @@ public class GrpcServiceProcessor implements BeanPostProcessor {
                     
                     // 如果只有一个参数，直接反序列化
                     if (paramTypes.length == 1) {
-                        args[0] = SerializationUtil.deserialize(payload, paramTypes[0]);
+                        // 获取目标方法的第一个参数的泛型类型
+                        Type genericType = method.getGenericParameterTypes()[0];
+                        // 动态构造 TypeReference
+                        TypeReference<?> typeRef = createTypeReference(genericType);
+                        // 调用 SerializationUtil.deserialize 方法
+                        args[0] = SerializationUtil.deserialize(payload, typeRef);
                     } else {
                         // 如果有多个参数，需要先解析参数数组
-                        Object[] params = SerializationUtil.deserialize(payload, Object[].class);
-                        for (int i = 0; i < paramTypes.length && i < params.length; i++) {
-                            if (params[i] != null) {
-                                // 将每个参数转换为正确的类型
-                                args[i] = SerializationUtil.convertValue(params[i], paramTypes[i]);
-                            }
+                        for (int i = 0; i < paramTypes.length; i++) {
+                            Type genericType = method.getGenericParameterTypes()[i];
+                            TypeReference<?> typeRef = createTypeReference(genericType);
+                            args[i] = SerializationUtil.deserialize(payload, typeRef);
                         }
                     }
                 } else {
@@ -60,6 +78,15 @@ public class GrpcServiceProcessor implements BeanPostProcessor {
                     .build();
             }
 
+            private static TypeReference<?> createTypeReference(Type type) {
+                return new TypeReference<Object>() {
+                    @Override
+                    public Type getType() {
+                        return type;
+                    }
+                };
+            }
+
             @Override
             protected void handleServerStream(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) throws Exception {
                 // 默认实现，如果需要流式处理，子类可以重写此方法
@@ -67,6 +94,9 @@ public class GrpcServiceProcessor implements BeanPostProcessor {
             }
         };
     }
+
+
+
 
     private Method findMethod(Class<?> serviceClass, String methodName) {
         for (Method method : serviceClass.getMethods()) {

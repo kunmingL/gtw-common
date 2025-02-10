@@ -1,5 +1,6 @@
 package com.changjiang.grpc.util;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 
@@ -14,9 +15,9 @@ public class SerializationUtil {
         }
     }
 
-    public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
+    public static <T> T deserialize(byte[] bytes, TypeReference<T> typeReference) {
         try {
-            return objectMapper.readValue(bytes, clazz);
+            return objectMapper.readValue(bytes, typeReference);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize object", e);
         }
