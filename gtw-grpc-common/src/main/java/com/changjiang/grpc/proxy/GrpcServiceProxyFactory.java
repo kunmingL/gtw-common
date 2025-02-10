@@ -4,12 +4,14 @@ import com.changjiang.grpc.client.GrpcTemplate;
 import com.changjiang.grpc.lib.GrpcRequest;
 import com.changjiang.grpc.lib.GrpcResponse;
 import com.changjiang.grpc.util.SerializationUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 
 public class GrpcServiceProxyFactory {
     private static final Logger logger = LoggerFactory.getLogger(GrpcServiceProxyFactory.class);
@@ -54,9 +56,18 @@ public class GrpcServiceProxyFactory {
 
             // 反序列化响应结果
             return SerializationUtil.deserialize(
-                response.getPayload().toByteArray(), 
-                method.getReturnType()
+                response.getPayload().toByteArray(),
+                toTypeReference(method.getReturnType())
             );
         }
+    }
+
+    public static <T> TypeReference<T> toTypeReference(Class<T> clazz) {
+        return new TypeReference<T>() {
+            @Override
+            public Type getType() {
+                return clazz;
+            }
+        };
     }
 } 
