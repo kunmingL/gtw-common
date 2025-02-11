@@ -5,6 +5,7 @@ import com.changjiang.grpc.lib.GrpcRequest;
 import com.changjiang.grpc.lib.GrpcResponse;
 import com.changjiang.grpc.util.SerializationUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ public class GrpcServiceProxyFactory {
             GrpcRequest request = GrpcRequest.newBuilder()
                 .setServiceId(serviceId)
                 .setMethodName(method.getName())
-                .setPayload(SerializationUtil.serialize(args))
+                .setPayload(serializeMethodArgs(method, args))
                 .build();
 
             // 发送请求并获取响应
@@ -55,10 +56,36 @@ public class GrpcServiceProxyFactory {
             }
 
             // 反序列化响应结果
-            return SerializationUtil.deserialize(
-                response.getPayload().toByteArray(),
-                toTypeReference(method.getReturnType())
-            );
+            Type returnType = method.getGenericReturnType();
+            TypeReference<?> typeRef = createTypeReference(returnType);
+            return SerializationUtil.deserialize(response.getPayload().toByteArray(), typeRef);
+        }
+
+        private ByteString serializeMethodArgs(Method method, Object[] args) {
+            try {
+                if (args == null || args.length == 0) {
+                    return ByteString.EMPTY;
+                }
+                
+                // 如果只有一个参数，直接序列化该参数
+                if (args.length == 1) {
+                    return SerializationUtil.serialize(args[0]);
+                }
+                
+                // 多个参数时，序列化为参数数组
+                return SerializationUtil.serialize(args);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize method arguments", e);
+            }
+        }
+
+        private static TypeReference<?> createTypeReference(Type type) {
+            return new TypeReference<Object>() {
+                @Override
+                public Type getType() {
+                    return type;
+                }
+            };
         }
     }
 

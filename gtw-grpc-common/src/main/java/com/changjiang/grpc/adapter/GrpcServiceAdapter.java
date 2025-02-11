@@ -3,6 +3,7 @@ package com.changjiang.grpc.adapter;
 import com.changjiang.grpc.lib.GrpcRequest;
 import com.changjiang.grpc.lib.GrpcResponse;
 import com.changjiang.grpc.server.AbstractGrpcService;
+import com.changjiang.grpc.util.NpcsSerializerUtil;
 import com.changjiang.grpc.util.SerializationUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
@@ -65,18 +66,20 @@ public class GrpcServiceAdapter extends AbstractGrpcService {
         Object[] args = new Object[paramTypes.length];
 
         try {
+            // 如果只有一个参数，直接反序列化
             if (paramTypes.length == 1) {
-                // 获取目标方法的第一个参数的泛型类型
                 Type genericType = method.getGenericParameterTypes()[0];
-                // 动态构造 TypeReference
                 TypeReference<?> typeRef = createTypeReference(genericType);
-                // 调用 SerializationUtil.deserialize 方法
                 args[0] = SerializationUtil.deserialize(payload, typeRef);
             } else {
-                for (int i = 0; i < paramTypes.length; i++) {
+                // 多个参数时，先反序列化为对象数组
+                Object[] rawArgs = SerializationUtil.deserialize(payload, 
+                    new TypeReference<Object[]>() {});
+                
+                // 转换每个参数到正确的类型
+                for (int i = 0; i < paramTypes.length && i < rawArgs.length; i++) {
                     Type genericType = method.getGenericParameterTypes()[i];
-                    TypeReference<?> typeRef = createTypeReference(genericType);
-                    args[i] = SerializationUtil.deserialize(payload, typeRef);
+                    args[i] = SerializationUtil.convertValue(rawArgs[i], paramTypes[i]);
                 }
             }
         } catch (Exception e) {
@@ -86,7 +89,7 @@ public class GrpcServiceAdapter extends AbstractGrpcService {
 
         return args;
     }
-    // 辅助方法：动态构造 TypeReference
+
     private static TypeReference<?> createTypeReference(Type type) {
         return new TypeReference<Object>() {
             @Override
