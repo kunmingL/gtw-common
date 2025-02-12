@@ -25,7 +25,7 @@ public class GrpcServiceProcessor implements BeanPostProcessor {
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean.getClass().isAnnotationPresent(GrpcService.class)) {
             GrpcService annotation = bean.getClass().getAnnotation(GrpcService.class);
-            String serviceId = annotation.value().isEmpty() ? beanName : annotation.value();
+            String serviceId = annotation.registry().isEmpty() ? beanName : annotation.registry();
             
             // 创建适配器
             GrpcServiceAdapter adapter = new GrpcServiceAdapter(bean, serviceId);

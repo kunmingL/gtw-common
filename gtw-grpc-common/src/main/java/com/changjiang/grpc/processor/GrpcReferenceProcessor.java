@@ -35,7 +35,7 @@ public class GrpcReferenceProcessor implements BeanPostProcessor, ApplicationCon
     private void processField(Object bean, Field field) {
         GrpcReference reference = field.getAnnotation(GrpcReference.class);
         if (reference != null) {
-            String register = reference.register();
+            String register = reference.registry();
             GrpcTemplate template = getOrCreateTemplate(register);
             
             // 创建服务代理

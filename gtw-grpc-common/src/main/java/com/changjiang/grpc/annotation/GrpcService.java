@@ -9,5 +9,5 @@ import java.lang.annotation.*;
 @Documented
 @Service
 public @interface GrpcService {
-    String value() default "";
+    String registry() default "";
 } 

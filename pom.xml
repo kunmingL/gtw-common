@@ -21,6 +21,7 @@
         <module>gtw-grpc-proto</module>
         <module>gtw-grpc-common</module>
         <module>gtw-maven-plugin</module>
+        <module>gtw-rest-python</module>
     </modules>
 
     <properties>
