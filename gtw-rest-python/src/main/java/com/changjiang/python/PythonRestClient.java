@@ -23,7 +23,7 @@ import java.util.HashMap;
  * 提供了多种方式调用 Python 服务的能力，支持普通参数、文件上传和二进制数据处理
  */
 @Component
-public class PythonRestClient {
+public abstract class PythonRestClient {
     private static final Logger logger = LoggerFactory.getLogger(PythonRestClient.class);
     
     /**
