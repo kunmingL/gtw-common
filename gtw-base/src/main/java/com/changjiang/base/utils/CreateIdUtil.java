@@ -1,4 +1,4 @@
-package com.changjiang.bff.utils;
+package com.changjiang.base.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

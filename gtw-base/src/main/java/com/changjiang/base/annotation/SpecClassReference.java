@@ -1,4 +1,4 @@
-package com.changjiang.bff.annotation;
+package com.changjiang.base.annotation;
 
 import java.lang.annotation.*;
 

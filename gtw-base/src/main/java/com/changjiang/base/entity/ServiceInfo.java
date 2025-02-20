@@ -1,4 +1,4 @@
-package com.changjiang.bff.entity;
+package com.changjiang.base.entity;
 
 public class ServiceInfo extends ServiceAttachedInfo{
     private Class interfaceName;

@@ -1,6 +1,6 @@
-package com.changjiang.bff.annotation;
+package com.changjiang.base.annotation;
 
-import com.changjiang.bff.constants.SrvChannel;
+import com.changjiang.base.constants.SrvChannel;
 
 import java.lang.annotation.*;
 

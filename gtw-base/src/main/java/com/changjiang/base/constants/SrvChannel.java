@@ -1,4 +1,4 @@
-package com.changjiang.bff.constants;
+package com.changjiang.base.constants;
 
 public enum SrvChannel {
     PC,

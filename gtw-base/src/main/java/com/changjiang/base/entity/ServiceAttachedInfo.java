@@ -1,4 +1,4 @@
-package com.changjiang.bff.entity;
+package com.changjiang.base.entity;
 
 import java.util.HashMap;
 import java.util.Map;
