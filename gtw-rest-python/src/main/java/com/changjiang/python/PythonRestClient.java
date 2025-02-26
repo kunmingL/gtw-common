@@ -3,6 +3,7 @@ package com.changjiang.python;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.changjiang.python.model.FileResponse;
+import com.changjiang.python.model.StanderResponseModle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -65,9 +66,13 @@ public abstract class PythonRestClient {
                 requestEntity,
                 String.class
             );
-
-            // 将响应 JSON 转换为指定类型对象
-            return JSON.parseObject(response.getBody(), responseType);
+            StanderResponseModle standerResponseModle = JSON.parseObject(response.getBody(), StanderResponseModle.class);
+            if (!"200".equals(standerResponseModle.getCode())) {
+                throw new RuntimeException("Failed to get user info: " + standerResponseModle.getMsg());
+            }else {
+                // 将响应 JSON 转换为指定类型对象
+                return JSON.to(responseType, standerResponseModle.getData());
+            }
         } catch (Exception e) {
             logger.error("Error calling Python service: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to call Python service", e);
