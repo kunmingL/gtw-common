@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 public class Base64Utils {
+
     /**
      * 将文件内容转换为 Base64 编码字符串
      *
