@@ -1,6 +1,7 @@
 package com.changjiang.python;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import com.changjiang.python.model.FileResponse;
 import com.changjiang.python.model.StanderResponseModle;
@@ -40,54 +41,152 @@ public abstract class PythonRestClient {
     }
 
     /**
-     * 发送普通 JSON 请求到 Python 服务
-     * 适用于简单的请求-响应场景，响应类型明确的情况
-     *
-     * @param url 目标 Python 服务的 URL
-     * @param params 请求参数对象，将被转换为 JSON
-     * @param responseType 期望的响应类型
-     * @return 指定类型的响应对象
-     * @throws RuntimeException 当请求失败或响应处理出错时抛出
+     * 发送请求并返回指定类型的数据
+     * @param url 请求URL
+     * @param params 请求参数
+     * @param responseType 期望的返回类型
+     * @return 指定类型的响应数据
      */
     public <T> T callPythonService(String url, Object params, Class<T> responseType) {
         try {
-            // 设置请求头，指定 Content-Type 为 application/json
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 将参数对象序列化为 JSON 字符串
             String jsonBody = JSON.toJSONString(params);
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
 
-            // 执行 POST 请求
             ResponseEntity<String> response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 requestEntity,
                 String.class
             );
-            StanderResponseModle standerResponseModle = JSON.parseObject(response.getBody(), StanderResponseModle.class);
-            if (!"200".equals(standerResponseModle.getCode())) {
-                throw new RuntimeException("Failed to get user info: " + standerResponseModle.getMsg());
-            }else {
-                // 将响应 JSON 转换为指定类型对象
-                return JSON.to(responseType, standerResponseModle.getData());
+
+            // 解析标准响应模型
+            StanderResponseModle standerResponse = JSON.parseObject(response.getBody(), StanderResponseModle.class);
+            
+            // 检查响应状态
+            if (!"200".equals(standerResponse.getCode())) {
+                throw new RuntimeException("Service call failed: " + standerResponse.getMsg());
             }
+
+            // 从data字段中提取数据并转换为指定类型
+            JSONObject data = standerResponse.getData();
+            if (data == null) {
+                return null;
+            }
+
+            // 获取响应数据
+            Object responseData = data.containsKey("response") ? data.get("response") : data;
+            
+            // 处理基础类型
+            if (isPrimitiveOrWrapper(responseType)) {
+                if (responseData == null) {
+                    return null;
+                }
+                // 直接转换基础类型
+                return convertPrimitiveType(responseData, responseType);
+            }
+            
+            // 处理字符串类型
+            if (String.class.equals(responseType)) {
+                return responseType.cast(responseData.toString());
+            }
+            
+            // 其他复杂类型使用JSON转换
+            return JSON.parseObject(JSON.toJSONString(responseData), responseType);
         } catch (Exception e) {
             logger.error("Error calling Python service: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to call Python service", e);
+            throw new RuntimeException("Failed to call Python service: " + e.getMessage(), e);
         }
     }
 
     /**
-     * 发送支持泛型的 JSON 请求
-     * 适用于需要处理复杂类型（如 List<T>, Map<K,V> 等）的场景
-     *
-     * @param url 目标 Python 服务的 URL
-     * @param params 请求参数对象
-     * @param typeReference 泛型类型引用，用于正确解析复杂类型
-     * @return 指定泛型类型的响应对象
-     * @throws RuntimeException 当请求失败或响应处理出错时抛出
+     * 判断是否为基础类型或其包装类
+     */
+    private boolean isPrimitiveOrWrapper(Class<?> clazz) {
+        return clazz.isPrimitive() || 
+               Integer.class.equals(clazz) ||
+               Long.class.equals(clazz) ||
+               Double.class.equals(clazz) ||
+               Float.class.equals(clazz) ||
+               Boolean.class.equals(clazz) ||
+               Byte.class.equals(clazz) ||
+               Short.class.equals(clazz) ||
+               Character.class.equals(clazz);
+    }
+
+    /**
+     * 转换基础类型
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T convertPrimitiveType(Object value, Class<T> targetType) {
+        if (value == null) {
+            return null;
+        }
+
+        // 处理数字类型
+        if (value instanceof Number) {
+            Number number = (Number) value;
+            if (targetType == Integer.class || targetType == int.class) {
+                return (T) Integer.valueOf(number.intValue());
+            }
+            if (targetType == Long.class || targetType == long.class) {
+                return (T) Long.valueOf(number.longValue());
+            }
+            if (targetType == Double.class || targetType == double.class) {
+                return (T) Double.valueOf(number.doubleValue());
+            }
+            if (targetType == Float.class || targetType == float.class) {
+                return (T) Float.valueOf(number.floatValue());
+            }
+            if (targetType == Short.class || targetType == short.class) {
+                return (T) Short.valueOf(number.shortValue());
+            }
+            if (targetType == Byte.class || targetType == byte.class) {
+                return (T) Byte.valueOf(number.byteValue());
+            }
+        }
+
+        // 处理布尔类型
+        if (targetType == Boolean.class || targetType == boolean.class) {
+            if (value instanceof Boolean) {
+                return (T) value;
+            }
+            if (value instanceof String) {
+                return (T) Boolean.valueOf(value.toString());
+            }
+            if (value instanceof Number) {
+                return (T) Boolean.valueOf(((Number) value).intValue() != 0);
+            }
+        }
+
+        // 处理字符类型
+        if (targetType == Character.class || targetType == char.class) {
+            if (value instanceof Character) {
+                return (T) value;
+            }
+            String str = value.toString();
+            if (str.length() > 0) {
+                return (T) Character.valueOf(str.charAt(0));
+            }
+        }
+
+        // 如果无法转换，尝试使用toString后再转换
+        try {
+            return (T) value;
+        } catch (ClassCastException e) {
+            throw new RuntimeException("Cannot convert value of type " + 
+                value.getClass().getName() + " to target type " + targetType.getName());
+        }
+    }
+
+    /**
+     * 发送请求并返回复杂类型的数据（支持泛型）
+     * @param url 请求URL
+     * @param params 请求参数
+     * @param typeReference 期望的返回类型引用
+     * @return 指定类型的响应数据
      */
     public <T> T callPythonService(String url, Object params, TypeReference<T> typeReference) {
         try {
@@ -104,10 +203,27 @@ public abstract class PythonRestClient {
                 String.class
             );
 
-            return JSON.parseObject(response.getBody(), typeReference);
+            StanderResponseModle standerResponse = JSON.parseObject(response.getBody(), StanderResponseModle.class);
+            
+            if (!"200".equals(standerResponse.getCode())) {
+                throw new RuntimeException("Service call failed: " + standerResponse.getMsg());
+            }
+
+            JSONObject data = standerResponse.getData();
+            if (data == null) {
+                return null;
+            }
+
+            // 如果data中有response字段，则从response中获取数据
+            if (data.containsKey("response")) {
+                return JSON.parseObject(data.getString("response"), typeReference);
+            }
+            
+            // 否则直接转换整个data对象
+            return JSON.parseObject(data.toJSONString(), typeReference);
         } catch (Exception e) {
             logger.error("Error calling Python service: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to call Python service", e);
+            throw new RuntimeException("Failed to call Python service: " + e.getMessage(), e);
         }
     }
 
